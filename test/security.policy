@@ -1,0 +1,11 @@
+//grant codeBase "file:/home/miguel/Downloads/junit-platform-console-standalone-1.7.1.jar" {
+//    permission java.security.AllPermission;
+//};
+
+//grant codeBase "file:/home/miguel/Dropbox/coding_stuff/NetworkFileSystem/test/" {
+//    permission java.security.AllPermission;
+//};
+
+grant {
+    permission java.security.AllPermission;
+};
