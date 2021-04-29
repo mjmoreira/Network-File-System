@@ -1,3 +1,0 @@
-grant codeBase "file:/home/miguel/Dropbox/coding_stuff/NetworkFileSystem/src/" {
-    permission java.security.AllPermission;
-};

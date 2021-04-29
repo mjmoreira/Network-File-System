@@ -2,7 +2,7 @@
  * Methods for interaction with the Storage server by the client.
  */
 
-package nfs.shared;
+package nfs.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

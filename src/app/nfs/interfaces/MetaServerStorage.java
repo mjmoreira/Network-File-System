@@ -2,7 +2,7 @@
  * Methods for interaction with the Meta-data server by the storage server.
  */
 
-package nfs.shared;
+package nfs.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;

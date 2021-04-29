@@ -61,7 +61,8 @@ public class NFSTest {
 
 	@Test
 	void createStorage() throws RemoteException, NotBoundException {
-		StorageServer server = new StorageServer("localhost", Constants.REGISTRY_PORT);
+		StorageServer server = new StorageServer("1", "localhost", Constants.REGISTRY_PORT);
+		StorageServer server2 = new StorageServer("2", "localhost", Constants.REGISTRY_PORT);
 		assertNotNull(server);
 	}
 

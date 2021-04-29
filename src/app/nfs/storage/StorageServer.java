@@ -1,7 +1,7 @@
 package nfs.storage;
 
-import nfs.shared.StorageClient;
-import nfs.shared.MetaServerStorage;
+import nfs.interfaces.StorageClient;
+import nfs.interfaces.MetaServerStorage;
 import nfs.shared.Constants;
 
 import java.rmi.NotBoundException;
@@ -15,13 +15,16 @@ import java.rmi.server.UnicastRemoteObject;
 public class StorageServer implements StorageClient {
 	private Registry registry;
 	private MetaServerStorage metadataServer;
+	private String storageName;
 
-	public StorageServer(String host, int port)
+	public StorageServer(String name, String host, int port)
 			throws RemoteException, NotBoundException {
+		storageName = Constants.REGISTRY_ID_STORAGE + "-" + name;
+
 		registry = LocateRegistry.getRegistry(host, port);
 		metadataServer =
 			(MetaServerStorage) registry.lookup(Constants.REGISTRY_ID_METADATA);
-		registry.rebind(Constants.REGISTRY_ID_STORAGE,
+		registry.rebind(storageName,
 		                UnicastRemoteObject.exportObject((Remote) this, 0));
 	}
 
@@ -62,7 +65,7 @@ public class StorageServer implements StorageClient {
 			System.setSecurityManager(new SecurityManager());
 		}
 		try {
-			StorageServer storage = new StorageServer(args[0], Constants.REGISTRY_PORT);
+			StorageServer storage = new StorageServer(args[0], args[1], Constants.REGISTRY_PORT);
 
 			System.out.println("StorageServer created.");
 		} catch (Exception e) {

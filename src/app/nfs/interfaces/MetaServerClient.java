@@ -2,12 +2,13 @@
  * Methods for interaction with the Meta-data server by the client.
  */
 
-package nfs.shared;
+package nfs.interfaces;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+import nfs.shared.LsInfo;
+
 public interface MetaServerClient extends Remote {
-	// list dir
-	String listDir(String path) throws RemoteException;
+	LsInfo listDir(String[] path) throws RemoteException;
 }
