@@ -28,7 +28,6 @@ public final class File {
 
 	public File(String name, long size, Directory parent)
 		throws InvalidNameException, InvalidSizeException {
-		name = name.trim();
 		if (!validName(name)) {
 			throw new InvalidNameException(name);
 		}
@@ -63,6 +62,7 @@ public final class File {
 		return b.toString();
 	}
 
+	@Override
 	public String toString() {
 		return "[File: " + getCanonicalPathString() + "]";
 	}

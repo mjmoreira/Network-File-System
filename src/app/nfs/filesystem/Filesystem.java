@@ -17,13 +17,32 @@ public final class Filesystem {
 		if (!Path.validPathString(path)) {
 			return FAILURE_INVALID_PATH;
 		}
-		
+		if (path.length < 3) { // No files in root.
+			return FAILURE_PATH_NOT_OWNED_BY_STORAGE;
+		}
 		Directory parent = Directory.navigatePath(root, path, path.length - 1);
 		if (parent == null) {
 			return FAILURE_PATH_DOES_NOT_EXIST;
 		}
 		if (parent.createChildFile(path[path.length - 1], size) == null) {
 			return FAILURE_FILE_ALREADY_EXISTS;
+		}
+		return SUCCESS;
+	}
+
+	public int createStorageDirectory(String[] path, String storageId) {
+		if (!Path.validPathString(path)) {
+			return FAILURE_INVALID_PATH;
+		}
+		if (path.length > 2) { // storage root directory must be a child of root.
+			return FAILURE_PATH_TOO_DEEP;
+		}
+		Directory parent = Directory.navigatePath(root, path, path.length - 1);
+		if (parent == null) {
+			return FAILURE_PATH_DOES_NOT_EXIST;
+		}
+		if (parent.createChildDirectory(path[path.length-1], storageId)==null) {
+			return FAILURE_DIRECTORY_ALREADY_EXISTS;
 		}
 		return SUCCESS;
 	}
@@ -36,6 +55,9 @@ public final class Filesystem {
 		Directory parent = Directory.navigatePath(root, path, path.length - 1);
 		if (parent == null) {
 			return FAILURE_PATH_DOES_NOT_EXIST;
+		}
+		if (parent.getStorageId() == null) {
+			return FAILURE_PATH_NOT_OWNED_BY_STORAGE;
 		}
 		if (parent.createChildDirectory(path[path.length - 1]) == null) {
 			return FAILURE_DIRECTORY_ALREADY_EXISTS;

@@ -9,15 +9,15 @@ public class LsInfo implements Serializable {
 
 	public final String[] path; // path to directory, path[.length - 1] = name
 	public final String name; // directory name
-	public final String server;
+	public final String storageId;
 	public final LsDirectory[] directories;
 	public final LsFile[] files;
 
-	public LsInfo(String[] path, String name, String server,
+	public LsInfo(String[] path, String name, String storageId,
 			LsDirectory[] directories, LsFile[] files) {
 		this.path = path;
 		this.name = name;
-		this.server = server;
+		this.storageId = storageId;
 		this.directories = directories;
 		this.files = files;
 		if (this.directories != null) {
@@ -35,7 +35,7 @@ public class LsInfo implements Serializable {
 	@Override
 	public String toString() {
 		return "[LsInfo -- \npath:" + Path.pathString(path)
-		        + "\nstorage: " + server
+		        + "\nstorage: " + storageId
 		        + "\ndirectories: " + Arrays.toString(directories)
 		        + "\nfiles: " + Arrays.toString(files)
 		        + "]";

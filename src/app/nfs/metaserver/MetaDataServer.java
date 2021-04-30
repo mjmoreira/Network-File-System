@@ -6,8 +6,7 @@ import nfs.shared.Constants;
 import nfs.shared.LsInfo;
 import nfs.shared.LsDirectory;
 import nfs.shared.LsFile;
-import nfs.filesystem.Directory;
-import nfs.filesystem.File;
+import nfs.filesystem.Filesystem;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -24,17 +23,15 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 		return server;
 	}
 
-	private Directory root;
+	private Filesystem filesystem;
 
 	private MetaDataServer() {
-		root = Directory.createRootDirectory();
+		filesystem = new Filesystem();
 	}
 
 
 	// Client methods
 
-	// Pode receber String[] com o path. Fica mais fácil.
-	// Retorna String[] com path + Directory do último nó do path.
 	public LsInfo listDir(String[] path) throws RemoteException {
 		if (path.length == 0) {
 			return null;
@@ -60,6 +57,9 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 
 	// Storage methods
 
+	// TODO: tenho que impedir a criação de duas storages com o mesmo path
+	// ou com o mesmo ID. (O ID não deve ser problema porque é gerado pelo
+	// servidor de metadados).
 	public boolean addStorageServer(String path) throws RemoteException {
 		System.out.println("Storage -> Meta:: addStorageServer: " + path);
 		return false;

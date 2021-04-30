@@ -12,5 +12,7 @@ public class Constants {
 		public static final int FAILURE_PATH_DOES_NOT_EXIST = 2;
 		public static final int FAILURE_FILE_ALREADY_EXISTS = 3;
 		public static final int FAILURE_DIRECTORY_ALREADY_EXISTS = 4;
+		public static final int FAILURE_PATH_NOT_OWNED_BY_STORAGE = 5;
+		public static final int FAILURE_PATH_TOO_DEEP = 6;
 	}
 }

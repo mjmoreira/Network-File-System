@@ -9,14 +9,18 @@ import nfs.shared.LsInfo;
 import nfs.shared.LsFile;
 
 public final class Directory {
-
+	/**
+	 * Create a root Directory. The root is characterized by the name "", and
+	 * a null parent Directory.
+	 * @return a Directory to be used as root.
+	 */
 	public static Directory createRootDirectory() {
 		return new Directory();
 	}
 
 	/**
 	 * Traverse path from root until the directory named path[navigateLength - 1]
-	 * and return it.
+	 * and return it. Only checks Directory's.
 	 * 
 	 * for example:
 	 *   path: { "", "1", "2", "3" },
@@ -25,7 +29,7 @@ public final class Directory {
 	 * @param path
 	 * @param navigateLength Traverse path from root to the directory named
 	 * path[navigateLength - 1]
-	 * @return Directory if found path, null otherwise.
+	 * @return Directory if path exists, null otherwise.
 	 */
 	public static Directory navigatePath(Directory root, String[] path,
 			int navigateLength) {
@@ -44,7 +48,7 @@ public final class Directory {
 	}
 
 	private String name;
-	private String serverName; // name of the storage that holds this directory
+	private String storageId; // name of the storage that holds this directory
 	private Directory parent;
 	private SortedMap<String,Directory> directories;
 	private SortedMap<String,File> files;
@@ -60,7 +64,7 @@ public final class Directory {
 			throw new NullPointerException("Parent directory must be non null.");
 		}
 		this.name = name;
-		this.serverName = serverName;
+		this.storageId = serverName;
 		this.parent = parent;
 		this.directories = new TreeMap<>();
 		this.files = new TreeMap<>();
@@ -69,7 +73,7 @@ public final class Directory {
 	// to create root
 	private Directory() {
 		this.name = "";
-		this.serverName = null;
+		this.storageId = null;
 		this.parent = null;
 		this.directories = new TreeMap<>();
 		this.files = new TreeMap<>();
@@ -83,8 +87,8 @@ public final class Directory {
 		return parent;
 	}
 
-	public String getServerName() {
-		return serverName;
+	public String getStorageId() {
+		return storageId;
 	}
 
 	public Directory getChildDirectory(String name) {
@@ -100,17 +104,17 @@ public final class Directory {
 		if (directories.containsKey(name) || files.containsKey(name)) {
 			return null;
 		}
-		Directory d = new Directory(name, this, this.serverName);
+		Directory d = new Directory(name, this, this.storageId);
 		directories.put(name, d);
 		return d;
 	}
 
-	public Directory createChildDirectory(String name, String serverName)
+	public Directory createChildDirectory(String name, String storageId)
 			throws InvalidNameException {
 		if (directories.containsKey(name) || files.containsKey(name)) {
 			return null;
 		}
-		Directory d = new Directory(name, this, serverName);
+		Directory d = new Directory(name, this, storageId);
 		directories.put(name, d);
 		return d;
 	}
@@ -148,34 +152,35 @@ public final class Directory {
 		return b.toString();
 	}
 
+	@Override
 	public String toString() {
 		return "[Directory: " + getCanonicalPathString() + "]";
 	}
 
 	public LsDirectory getLsDirectory() {
-		return new LsDirectory(name, serverName);
+		return new LsDirectory(name, storageId);
 	}
 
+	/**
+	 * If there are no files or directories, the array has size 0.
+	 * @return
+	 */
 	public LsInfo generateLsInfo() {
-		LsFile[] lsFiles = null;
-		LsDirectory[] lsDirectories = null;
-		if (files.size() > 0) {
-			lsFiles = new LsFile[files.size()];
-			int i = 0;
-			for (File f: files.values()) {
-				lsFiles[i] = f.getLsFile();
-				i++;
-			}
+		LsFile[] lsFiles = new LsFile[files.size()];
+		int i = 0;
+		for (File f: files.values()) {
+			lsFiles[i] = f.getLsFile();
+			i++;
 		}
-		if (directories.size() > 0) {
-			lsDirectories = new LsDirectory[directories.size()];
-			int i = 0;
-			for (Directory d: directories.values()) {
-				lsDirectories[i] = d.getLsDirectory();
-				i++;
-			}
+
+		LsDirectory[] lsDirectories = new LsDirectory[directories.size()];
+		i = 0;
+		for (Directory d: directories.values()) {
+			lsDirectories[i] = d.getLsDirectory();
+			i++;
 		}
-		return new LsInfo(this.getCanonicalPath(), this.name, this.serverName,
+
+		return new LsInfo(this.getCanonicalPath(), this.name, this.storageId,
 		                  lsDirectories, lsFiles);
 	}
 }

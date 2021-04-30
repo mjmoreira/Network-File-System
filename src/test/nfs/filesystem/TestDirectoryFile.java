@@ -112,7 +112,10 @@ public class TestDirectoryFile {
 		          () -> assertFalse(File.validName(" ")),
 		          () -> assertFalse(File.validName("  ")),
 		          () -> assertFalse(File.validName("")),
-		          () -> assertFalse(File.validName("asdf-asdg"))
+		          () -> assertFalse(File.validName("asdf-asdg")),
+		          () -> assertFalse(File.validName(" valid.txt")),
+		          () -> assertFalse(File.validName("valid.txt ")),
+		          () -> assertFalse(File.validName(" valid.txt "))
 		         );
 	}
 

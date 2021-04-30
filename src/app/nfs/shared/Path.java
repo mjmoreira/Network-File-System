@@ -51,17 +51,17 @@ public class Path {
 		StringBuilder b = new StringBuilder();
 		for (String s: path) {
 			if (s.length() == 0) {
-				b.append('/');
+				b.append(SEPARATOR);
 			}
 			else {
 				b.append(s);
-				b.append('/');
+				b.append(SEPARATOR);
 			}
 		}
 		return b.toString();
 	}
 
 	public static String pathString(String[] path, String name) {
-		return pathString(path) + "/" + name;
+		return pathString(path) + SEPARATOR + name;
 	}
 }
