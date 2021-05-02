@@ -34,10 +34,10 @@ public class LsInfo implements Serializable {
 
 	@Override
 	public String toString() {
-		return "[LsInfo -- \npath:" + Path.pathString(path)
-		        + "\nstorage: " + storageId
-		        + "\ndirectories: " + Arrays.toString(directories)
-		        + "\nfiles: " + Arrays.toString(files)
+		return "[Path: " + Path.convertPath(path)
+		        + ", storage: " + storageId
+		        + ", directories: " + Arrays.toString(directories)
+		        + ", files: " + Arrays.toString(files)
 		        + "]";
 	}
 }

@@ -12,8 +12,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 public class TestFilesystem {
-	// TODO: criar teste para verificar se o que criei existe, ou é imprimido
-	// corretamente pelo LsInfo.
 
 	@Test
 	void fail_create_heigth_1_dir_non_storage() {
@@ -144,6 +142,24 @@ public class TestFilesystem {
 		assertEquals(FAILURE_PATH_DOES_NOT_EXIST, f.createDirectory(path1));
 	}
 	
+
+	@Test
+	void list_root() {
+		Filesystem f = new Filesystem();
+		String[] path1 = {"", "storage1"};
+		assertEquals(SUCCESS, f.createStorageDirectory(path1, "storage1"));
+		String[] path2 = {"", "storage2"};
+		assertEquals(SUCCESS, f.createStorageDirectory(path2, "storage2"));
+
+
+		String[] infoPath = new String[] {""};
+		LsInfo info = f.listDirectory(infoPath);
+		assertNotNull(info);
+		assertEquals(2, info.directories.length);
+		assertEquals(0, info.files.length);
+		assertTrue(Arrays.equals(info.path, infoPath));
+	}
+
 	@Test
 	void list_empty_directory() {
 		Filesystem f = new Filesystem();

@@ -3,16 +3,16 @@ package nfs.shared;
 import java.io.Serializable;
 
 // retornado pelo servidor de metadados como resposta ao list dir
-public class LsDirectory implements Serializable {
+public class LsDirectory implements Serializable, Comparable<LsDirectory> {
 	private static final long serialVersionUID = 20210428001L;
 
 	public final String name;
-	public final String server;
+	public final String storageId;
 	public LsInfo parent;
 
 	public LsDirectory(String name, String server) {
 		this.name = name;
-		this.server = server;
+		this.storageId = server;
 		this.parent = null;
 	}
 
@@ -22,6 +22,10 @@ public class LsDirectory implements Serializable {
 
 	@Override
 	public String toString() {
-		return "<" + name + "@" + server + ">";
+		return "<" + name + " @" + storageId + ">";
+	}
+
+	public int compareTo(LsDirectory o) {
+		return this.name.compareTo(o.name);
 	}
 }

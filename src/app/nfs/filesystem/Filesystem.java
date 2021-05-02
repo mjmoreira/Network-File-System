@@ -14,7 +14,7 @@ public final class Filesystem {
 
 
 	public int createFile(String[] path, long size) {
-		if (!Path.validPathString(path)) {
+		if (!Path.isValidPath(path)) {
 			return FAILURE_INVALID_PATH;
 		}
 		if (path.length < 3) { // No files in root.
@@ -31,7 +31,7 @@ public final class Filesystem {
 	}
 
 	public int createStorageDirectory(String[] path, String storageId) {
-		if (!Path.validPathString(path)) {
+		if (!Path.isValidPath(path)) {
 			return FAILURE_INVALID_PATH;
 		}
 		if (path.length > 2) { // storage root directory must be a child of root.
@@ -48,7 +48,7 @@ public final class Filesystem {
 	}
 
 	public int createDirectory(String[] path) {
-		if (!Path.validPathString(path)) {
+		if (!Path.isValidPath(path)) {
 			return FAILURE_INVALID_PATH;
 		}
 
@@ -66,16 +66,27 @@ public final class Filesystem {
 	}
 
 	public LsInfo listDirectory(String[] path) {
-		if (!Path.validPathString(path)) {
+		if (!Path.isValidPath(path)) {
 			return null;
 		}
 		
+		// Traverse the path until we reach the parent directory of
+		// path[path.length -1].
+		// The objective is to provide a listing of the parent directory if the
+		// path "path" leads to a file, because the information of the file
+		// is contained in the listing of his parent directory.
+
+		// "parent" contains the directory with name path[path.length - 2].
 		Directory parent = Directory.navigatePath(root, path, path.length - 1);
 		// Path does not exist.
 		if (parent == null) {
 			return null;
 		}
-		// Check if the path leads to a directory
+		// Special case: "parent" is the actual directory to be listed.
+		if (parent == root && path.length == 1) {
+			return parent.generateLsInfo();
+		}
+		// Check if the path leads to a directory.
 		Directory dir = parent.getChildDirectory(path[path.length - 1]);
 		// If the path leads to a file, the parent directory is listed.
 		if (dir == null) {
@@ -83,10 +94,10 @@ public final class Filesystem {
 			if (parent.getChildFile(path[path.length - 1]) == null) {
 				return null;
 			}
-			// Path leads to a file
+			// Path leads to a file.
 			dir = parent;
 		}
-		
+
 		return dir.generateLsInfo();
 	}
 }

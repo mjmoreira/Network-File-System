@@ -34,7 +34,7 @@ public final class Directory {
 	public static Directory navigatePath(Directory root, String[] path,
 			int navigateLength) {
 		// path must always start with root, "".
-		if (path.length == 0 || navigateLength < 1 || path[0].length() != 0) {
+		if (path.length == 0 || navigateLength < 0 || path[0].length() != 0) {
 			return null;
 		}
 		Directory current = root;

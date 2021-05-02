@@ -2,7 +2,7 @@ package nfs.shared;
 
 import java.io.Serializable;
 
-public class LsFile implements Serializable {
+public class LsFile implements Serializable, Comparable<LsFile> {
 	private static final long serialVersionUID = 20210428001L;
 
 	public final String name;
@@ -21,6 +21,10 @@ public class LsFile implements Serializable {
 
 	@Override
 	public String toString() {
-		return "«" + name + ";" + size + "»";
+		return "«" + name + " #" + size + "»";
+	}
+
+	public int compareTo(LsFile o) {
+		return this.name.compareTo(o.name);
 	}
 }

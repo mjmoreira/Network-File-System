@@ -30,27 +30,27 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 	}
 
 
+	public void createTestFilesystemTree() {
+		Filesystem f = filesystem;
+		f.createStorageDirectory(new String[] {"", "s1"}, "storageId-1");
+		f.createDirectory(new String[] {"", "s1", "d1"});
+		f.createDirectory(new String[] {"", "s1", "d1", "d2"});
+		f.createDirectory(new String[] {"", "s1", "d1", "d2", "d3"});
+		f.createFile(new String[] {"", "s1", "f1"}, 11L);
+		f.createFile(new String[] {"", "s1", "f2"}, 22L);
+		f.createFile(new String[] {"", "s1", "d1", "d2", "d3", "f3"}, 33L);
+		f.createFile(new String[] {"", "s1", "d1", "d2", "d3", "f4"}, 44L);
+		f.createFile(new String[] {"", "s1", "d1", "f5"}, 55L);
+		f.createStorageDirectory(new String[] {"", "s2"}, "storageId-2");
+		f.createDirectory(new String[] {"", "s2", "d1"});
+	}
+
 	// Client methods
 
 	public LsInfo listDir(String[] path) throws RemoteException {
-		if (path.length == 0) {
-			return null;
-		}
 		System.out.println("Client -> Meta:: listDir: " + Arrays.toString(path));
 
-				
-		LsDirectory[] dirs = new LsDirectory[3];
-		dirs[0] = new LsDirectory("dir1", "storage1");
-		dirs[1] = new LsDirectory("dir2", "storage1");
-		dirs[2] = new LsDirectory("dir3", "storage1");
-		
-		LsFile[] files = new LsFile[2];
-		files[0] = new LsFile("file1", 111L);
-		files[1] = new LsFile("file2", 222L);
-		
-		LsInfo info =
-			new LsInfo(path, path[path.length - 1], "storage1", dirs, files);
-		return info;
+		return filesystem.listDirectory(path);
 	}
 
 	// ---------------------------
@@ -94,6 +94,7 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 		}
 		try {
 			MetaDataServer server = new MetaDataServer();
+			server.createTestFilesystemTree();
 			Remote stub = UnicastRemoteObject.exportObject((Remote) server, 0);
 			Registry registry = LocateRegistry.createRegistry(Constants.REGISTRY_PORT);
 			registry.rebind(Constants.REGISTRY_ID_METADATA, stub);
