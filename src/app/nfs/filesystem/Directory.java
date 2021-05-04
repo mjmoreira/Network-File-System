@@ -53,9 +53,8 @@ public final class Directory {
 	private SortedMap<String,Directory> directories;
 	private SortedMap<String,File> files;
 
-	// to create non root directories
-	// Não deve ser usado diretamente. Tem que se usar createChildDirectory()
-	private Directory(String name, Directory parent, String serverName)
+	// Do not use directly. Use createRootDirectory() or createChildDirectory().
+	private Directory(String name, Directory parent, String storageId)
 			throws InvalidNameException {
 		if (!File.validName(name)) {
 			throw new InvalidNameException(name);
@@ -64,7 +63,7 @@ public final class Directory {
 			throw new NullPointerException("Parent directory must be non null.");
 		}
 		this.name = name;
-		this.storageId = serverName;
+		this.storageId = storageId;
 		this.parent = parent;
 		this.directories = new TreeMap<>();
 		this.files = new TreeMap<>();

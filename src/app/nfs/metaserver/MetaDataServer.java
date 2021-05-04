@@ -4,8 +4,6 @@ import nfs.interfaces.MetaServerClient;
 import nfs.interfaces.MetaServerStorage;
 import nfs.shared.Constants;
 import nfs.shared.LsInfo;
-import nfs.shared.LsDirectory;
-import nfs.shared.LsFile;
 import nfs.filesystem.Filesystem;
 
 import java.rmi.Remote;

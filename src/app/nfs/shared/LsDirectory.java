@@ -2,7 +2,10 @@ package nfs.shared;
 
 import java.io.Serializable;
 
-// retornado pelo servidor de metadados como resposta ao list dir
+/**
+ * Used in the response (LsInfo) of the requests of the client to list a
+ * directory.
+ */
 public class LsDirectory implements Serializable, Comparable<LsDirectory> {
 	private static final long serialVersionUID = 20210428001L;
 

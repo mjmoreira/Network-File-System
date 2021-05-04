@@ -2,7 +2,6 @@ package nfs.client;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Arrays;
 import java.util.Scanner;
 
 import nfs.interfaces.MetaServerClient;
