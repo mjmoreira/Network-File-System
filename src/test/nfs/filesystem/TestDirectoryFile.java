@@ -5,12 +5,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 public class TestDirectoryFile {
-	// TODO: Escrever testes para o validador de nomes e dos throws dos construtores.
-
-	// @Test
-	// void directory_null_parent_exception() {
-	// 	assertThrows(NullPointerException.class, () -> new Directory("name", null, ""));
-	// }
+	@Test
+	void check_constructor_throws() {
+		Directory r = Directory.createRootDirectory();
+		assertThrows(InvalidNameException.class,
+		             () -> r.createChildDirectory(" ", "sId1"));
+		assertThrows(InvalidNameException.class,
+		             () -> r.createChildFile(" ", 10));
+		assertThrows(InvalidSizeException.class,
+		             () -> r.createChildFile("valid", -10));
+	}
 
 	@Test
 	void file_in_root_Path() {
