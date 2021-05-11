@@ -27,7 +27,7 @@ public class Client {
 		try {
 			Registry registry = LocateRegistry.getRegistry(args[0]);
 			MetaServerClient meta = (MetaServerClient)
-				registry.lookup(Constants.REGISTRY_ID_METADATA);
+				registry.lookup(Constants.METADATA_REGISTRY_ID);
 
 			Scanner in = new Scanner(System.in);
 			System.out.print("Path: ");

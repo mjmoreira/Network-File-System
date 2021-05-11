@@ -1,6 +1,6 @@
 package nfs.filesystem;
 
-import static nfs.shared.Constants.ReturnStatus.*;
+import static nfs.shared.ReturnStatus.*;
 import nfs.shared.LsInfo;
 import nfs.shared.LsDirectory;
 import nfs.shared.LsFile;
@@ -33,7 +33,7 @@ public class TestFilesystem {
 		String[] path = {"", "storage1"};
 		f.createStorageDirectory(path, "storage1");
 		String[] path2 = {"", "storage1", "storage2"};
-		assertEquals(FAILURE_PATH_TOO_DEEP,
+		assertEquals(FAILURE_STORAGE_MOUNT_TOO_DEEP,
 		             f.createStorageDirectory(path2, "storage2"));
 	}
 

@@ -4,7 +4,11 @@ import nfs.interfaces.MetaServerClient;
 import nfs.interfaces.MetaServerStorage;
 import nfs.shared.Constants;
 import nfs.shared.LsInfo;
+import nfs.shared.Path;
+import nfs.shared.StorageLocation;
 import nfs.filesystem.Filesystem;
+import nfs.shared.ReturnStatus;
+import static nfs.shared.ReturnStatus.*;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -12,6 +16,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.HashSet;
 
 public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 	private static MetaDataServer server = null;
@@ -22,9 +28,11 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 	}
 
 	private Filesystem filesystem;
+	private Set<String> validStorageIds;
 
 	private MetaDataServer() {
 		filesystem = new Filesystem();
+		validStorageIds = new HashSet<>();
 	}
 
 
@@ -58,30 +66,44 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 	// TODO: tenho que impedir a criação de duas storages com o mesmo path
 	// ou com o mesmo ID. (O ID não deve ser problema porque é gerado pelo
 	// servidor de metadados).
-	public boolean addStorageServer(String path) throws RemoteException {
-		System.out.println("Storage -> Meta:: addStorageServer: " + path);
-		return false;
-	}
-	public boolean deleteStorageServer(String path) throws RemoteException {
-		System.out.println("Storage -> Meta:: deleteStorageServer: " + path);
-		return false;
+	public ReturnStatus addStorageServer(StorageLocation sl) throws RemoteException {
+		System.out.println("Storage -> Meta:: addStorageServer: " + sl.mountName);
+		if (!validStorageIds.contains(sl.storageId)) {
+			return FAILURE_INVALID_STORAGE_ID;
+		}
+		return filesystem.createStorageDirectory(new String[] {"", sl.mountName},
+		                                         sl.storageId);
 	}
 
-	public boolean addFile(String path) throws RemoteException {
-		System.out.println("Storage -> Meta:: addFile: " + path);
-		return false;
+	public ReturnStatus deleteStorageServer(StorageLocation sl) throws RemoteException {
+		System.out.println("Storage -> Meta:: deleteStorageServer: " + sl.mountName);
+		return FAILURE_NOT_IMPLEMENTED;
 	}
-	public boolean addDirectory(String path) throws RemoteException {
-		System.out.println("Storage -> Meta:: addDirectory: " + path);
-		return false;
+
+	// Can return an array of 2 Strings: the storageId and the cookie.
+	// Alternatively, the cookie can be returned when the storage is officially
+	// created.
+	public String getNewStorageId() throws RemoteException {
+		String id = "Storage-" + System.nanoTime();
+		validStorageIds.add(id);
+		return id;
 	}
-	public boolean removeFile(String path) throws RemoteException {
-		System.out.println("Storage -> Meta:: removeFile: " + path);
-		return false;
+
+	public ReturnStatus addFile(String[] path, long size) throws RemoteException {
+		System.out.println("Storage -> Meta:: addFile: " + Path.convertPath(path));
+		return filesystem.createFile(path, size);
 	}
-	public boolean removeDirectory(String path) throws RemoteException {
-		System.out.println("Storage -> Meta:: removeDirectory: " + path);
-		return false;
+	public ReturnStatus addDirectory(String[] path) throws RemoteException {
+		System.out.println("Storage -> Meta:: addDirectory: " + Path.convertPath(path));
+		return filesystem.createDirectory(path);
+	}
+	public ReturnStatus removeFile(String[] path) throws RemoteException {
+		System.out.println("Storage -> Meta:: removeFile: " + Path.convertPath(path));
+		return FAILURE_NOT_IMPLEMENTED;
+	}
+	public ReturnStatus removeDirectory(String[] path) throws RemoteException {
+		System.out.println("Storage -> Meta:: removeDirectory: " + Path.convertPath(path));
+		return FAILURE_NOT_IMPLEMENTED;
 	}
 
 	// ---------------------------
@@ -95,7 +117,7 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 			server.createTestFilesystemTree();
 			Remote stub = UnicastRemoteObject.exportObject((Remote) server, 0);
 			Registry registry = LocateRegistry.createRegistry(Constants.REGISTRY_PORT);
-			registry.rebind(Constants.REGISTRY_ID_METADATA, stub);
+			registry.rebind(Constants.METADATA_REGISTRY_ID, stub);
 			System.out.println("MetaDataServer created.");
 		} catch (Exception e) {
 			System.err.println("MetaDataServer exception:");

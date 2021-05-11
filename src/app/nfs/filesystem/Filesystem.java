@@ -2,7 +2,8 @@ package nfs.filesystem;
 
 import nfs.shared.Path;
 import nfs.shared.LsInfo;
-import static nfs.shared.Constants.ReturnStatus.*;
+import nfs.shared.ReturnStatus;
+import static nfs.shared.ReturnStatus.*;
 
 public final class Filesystem {
 	private Directory root;
@@ -13,7 +14,7 @@ public final class Filesystem {
 	}
 
 
-	public int createFile(String[] path, long size) {
+	public ReturnStatus createFile(String[] path, long size) {
 		if (!Path.isValidPath(path)) {
 			return FAILURE_INVALID_PATH;
 		}
@@ -30,12 +31,12 @@ public final class Filesystem {
 		return SUCCESS;
 	}
 
-	public int createStorageDirectory(String[] path, String storageId) {
+	public ReturnStatus createStorageDirectory(String[] path, String storageId) {
 		if (!Path.isValidPath(path)) {
 			return FAILURE_INVALID_PATH;
 		}
 		if (path.length > 2) { // storage root directory must be a child of root.
-			return FAILURE_PATH_TOO_DEEP;
+			return FAILURE_STORAGE_MOUNT_TOO_DEEP;
 		}
 		Directory parent = Directory.navigatePath(root, path, path.length - 1);
 		if (parent == null) {
@@ -47,7 +48,7 @@ public final class Filesystem {
 		return SUCCESS;
 	}
 
-	public int createDirectory(String[] path) {
+	public ReturnStatus createDirectory(String[] path) {
 		if (!Path.isValidPath(path)) {
 			return FAILURE_INVALID_PATH;
 		}
