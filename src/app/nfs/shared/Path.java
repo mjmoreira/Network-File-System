@@ -1,5 +1,7 @@
 package nfs.shared;
 
+import java.util.regex.Pattern;
+
 import nfs.filesystem.File;
 
 
@@ -17,6 +19,7 @@ public class Path {
 	// |____________________|______________________________|
 
 	private static final String SEPARATOR = "/";
+	private static final Pattern slashes = Pattern.compile("/[/]+");
 
 	/**
 	 * Check if canonical path is valid.
@@ -41,7 +44,9 @@ public class Path {
 	 * @return
 	 */
 	public static boolean isValidPath(String path) {
-		// FIXME: //, ///, ////, ... are considered valid.
+		if (slashes.matcher(path).matches()) { // special case "//", "///", ...
+			return false;
+		}
 		String[] parts = convertPath(path);
 		return isValidPath(parts);
 	}
