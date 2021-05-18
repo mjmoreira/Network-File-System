@@ -72,6 +72,26 @@ public class TestFilesystem {
 	}
 
 	@Test
+	void fail_create_2_files_with_same_path() {
+		Filesystem f = new Filesystem();
+		String[] path = {"", "storage"};
+		assertEquals(SUCCESS, f.createStorageDirectory(path, "storage"));
+		String[] path1 = {"", "storage", "file1.asdf"};
+		assertEquals(SUCCESS, f.createFile(path1, 12345));
+		assertEquals(FAILURE_FILE_ALREADY_EXISTS, f.createFile(path1, 67890));
+	}
+
+	@Test
+	void fail_create_2_directories_with_same_path() {
+		Filesystem f = new Filesystem();
+		String[] path = {"", "storage"};
+		assertEquals(SUCCESS, f.createStorageDirectory(path, "storage"));
+		String[] path1 = {"", "storage", "dir1"};
+		assertEquals(SUCCESS, f.createDirectory(path1));
+		assertEquals(FAILURE_DIRECTORY_ALREADY_EXISTS, f.createDirectory(path1));
+	}
+
+	@Test
 	void create_1_storage_2_directories() {
 		Filesystem f = new Filesystem();
 		String[] path = {"", "storage"};
