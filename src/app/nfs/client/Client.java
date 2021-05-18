@@ -33,7 +33,7 @@ public class Client {
 			System.out.print("Path: ");
 			while (in.hasNext()) {
 				String s = in.nextLine().trim();
-				String[] path = Path.convertPath(s);
+				String[] path = Path.validateAndConvertPath(s);
 				if (path == null) {
 					System.out.println("Bad path: " + s);
 				}
