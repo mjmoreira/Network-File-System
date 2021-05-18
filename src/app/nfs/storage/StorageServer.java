@@ -1,27 +1,11 @@
 package nfs.storage;
 
-import nfs.interfaces.StorageClient;
-import nfs.interfaces.MetaServerStorage;
 import nfs.shared.Constants;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.rmi.NotBoundException;
-import java.rmi.Remote;
-import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.rmi.server.UnicastRemoteObject;
-
-
 
 public class StorageServer {
 
-	// Deve receber como argumento o nome de um ficheiro com o hostname, e o
-	// endereço IP do servidor de metadados. Determina o seu hostname e o
-	// endereço IP pelas funções de InetAddress
-	// InetAddress.getLocalHost().getHostName()
-	// Tem problemas, ver: https://stackoverflow.com/questions/7348711/recommended-way-to-get-hostname-in-java
+	// Should receive as arguments the name of the file with the address of the
+	// metadata server.
 	public static void main(String[] args) {
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());

@@ -4,15 +4,15 @@
 
 package nfs.interfaces;
 
-import nfs.shared.StorageLocation;
+import nfs.shared.StorageInformation;
 import nfs.shared.ReturnStatus;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface MetaServerStorage extends Remote {
-	ReturnStatus addStorageServer(StorageLocation sl) throws RemoteException;
-	ReturnStatus deleteStorageServer(StorageLocation sl) throws RemoteException;
+	ReturnStatus addStorageServer(StorageInformation sl) throws RemoteException;
+	ReturnStatus deleteStorageServer(StorageInformation sl) throws RemoteException;
 	String getNewStorageId() throws RemoteException;
 
 	ReturnStatus addFile(String[] path, long size) throws RemoteException;

@@ -1,23 +1,31 @@
 package nfs.metaserver;
 
-import nfs.shared.StorageLocation;
+import nfs.shared.StorageInformation;
 
-/* O storage mapper faz o mapeamento do storageID para um objeto com a informação
- * sobre o storage, que permite ao cliente contactá-lo.
- * - Tem que permitir gerar o storageID
- * - Tenho que definir como vou mapear (storageId -> StorageInfo)
- * - Posso guardar aqui uma estrutura de dados que associa uma cookie que só o 
- *   storage conhece ao caminho que gere. (StorageInfo). Depois devo ter que
- *   criar vários maps, para permitir chegar ao StorageInfo tendo por base a
- *   cookie e o storageId.
- * - Tenho que criar aqui uma estrutura parecida com o StorageLocation, a
- *   StorageInfo com toda a info gerida por este objeto, e que sabe gerar o
- *   respetivo StorageLocation.
+import java.util.Map;
+import java.util.HashMap;
+
+/**
+ * StorageMapper permits obtaining a storage server's StorageInformation from
+ * its storage server identifier. This allows a client to obtain the information
+ * necessary to contact the storage server who owns a particular directory.
  */
-public class StorageMapper {
-	
-	private static class StorageInfo {
-		// tenho que ver se vale a pena guardar o mount point para além de toda
-		// a info descrita acima.
+class StorageMapper {
+	Map<String, StorageInformation> storageIdMap;
+	// Can also be used to map a cookie (only known to the storage server) to the
+	// StorageInformation, as a way of authenticating the caller of the storage
+	// remote methods, in order to prevent a storage server from altering other
+	// storage's tree at the metadata server.
+
+	StorageMapper() {
+		storageIdMap = new HashMap<>();
+	}
+
+	void addStorageServer(StorageInformation storageInfo) {
+		storageIdMap.put(storageInfo.storageId, storageInfo);
+	}
+
+	StorageInformation getStorageServer(String storageId) {
+		return storageIdMap.get(storageId);
 	}
 }

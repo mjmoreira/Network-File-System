@@ -5,7 +5,7 @@ import nfs.interfaces.MetaServerStorage;
 import nfs.shared.Constants;
 import nfs.shared.LsInfo;
 import nfs.shared.Path;
-import nfs.shared.StorageLocation;
+import nfs.shared.StorageInformation;
 import nfs.filesystem.Filesystem;
 import nfs.shared.ReturnStatus;
 import static nfs.shared.ReturnStatus.*;
@@ -55,7 +55,6 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 
 	public LsInfo listDir(String[] path) throws RemoteException {
 		System.out.println("Client -> Meta:: listDir: " + Arrays.toString(path));
-
 		return filesystem.listDirectory(path);
 	}
 
@@ -63,10 +62,8 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 
 	// Storage methods
 
-	// TODO: tenho que impedir a criação de duas storages com o mesmo path
-	// ou com o mesmo ID. (O ID não deve ser problema porque é gerado pelo
-	// servidor de metadados).
-	public ReturnStatus addStorageServer(StorageLocation sl) throws RemoteException {
+	public ReturnStatus addStorageServer(StorageInformation sl)
+			throws RemoteException {
 		System.out.println("Storage -> Meta:: addStorageServer: " + sl.mountName);
 		if (!validStorageIds.contains(sl.storageId)) {
 			return FAILURE_INVALID_STORAGE_ID;
@@ -75,7 +72,8 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 		                                         sl.storageId);
 	}
 
-	public ReturnStatus deleteStorageServer(StorageLocation sl) throws RemoteException {
+	public ReturnStatus deleteStorageServer(StorageInformation sl)
+			throws RemoteException {
 		System.out.println("Storage -> Meta:: deleteStorageServer: " + sl.mountName);
 		return FAILURE_NOT_IMPLEMENTED;
 	}

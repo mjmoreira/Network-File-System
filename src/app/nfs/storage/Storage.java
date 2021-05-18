@@ -5,7 +5,7 @@ import nfs.interfaces.MetaServerStorage;
 import nfs.filesystem.*;
 import nfs.shared.Path;
 import nfs.shared.ReturnStatus;
-import nfs.shared.StorageLocation;
+import nfs.shared.StorageInformation;
 import static nfs.shared.ReturnStatus.*;
 
 import java.util.Random;
@@ -28,28 +28,31 @@ public class Storage implements StorageClient {
 	                                    String storageMountName) {
 		Storage storage = new Storage();
 		try {
-			// Create local filesystem tree
+			/* Create local filesystem tree. */
 			storage.fs = createFilesystem(storageMountName);
 
-			// Create local registry
+			/* Create local RMI registry. */
 			createLocalRegistry();
 
+			/* Get metadata server's stub from its RMI registry. */
 			storage.metadataServer = (MetaServerStorage) LocateRegistry
 			                         .getRegistry(metaHostName, metaRegistryPort)
 			                         .lookup(metaRegistryName);
 
-			// Get unique identifier from metadata server
+			/* Get unique identifier, to identify this storage server in the
+			   filesystem tree. */
 			storage.storageId = storage.metadataServer.getNewStorageId();
 
-			// Register the storage object in the local rmi server.
+			/* Register the storage object in the local RMI server. */
 			localRegistry.rebind(storage.storageId,
 			                     UnicastRemoteObject.exportObject(storage, 0));
 
-			// Create storage directory in the metadata server
-			StorageLocation sl = new StorageLocation(storage.storageId,
-			                    InetAddress.getLocalHost().getCanonicalHostName(),
-			                    localRegistryPort,
-			                    storageMountName);
+			/* Create this storage root directory at the metadata server. */
+			StorageInformation sl =
+				new StorageInformation(storage.storageId,
+				                       InetAddress.getLocalHost().getCanonicalHostName(),
+				                       localRegistryPort,
+				                       storageMountName);
 			if (!storage.metadataServer.addStorageServer(sl).ok) {
 				System.err.println("Failed to add storage server: "
 				                   + storageMountName);
