@@ -3,17 +3,23 @@ package nfs.storage;
 import nfs.interfaces.StorageClient;
 import nfs.interfaces.MetaServerStorage;
 import nfs.filesystem.*;
-import nfs.shared.Path;
+import nfs.shared.NFSPath;
 import nfs.shared.ReturnStatus;
 import nfs.shared.StorageInformation;
 import static nfs.shared.ReturnStatus.*;
 
+import java.util.Arrays;
 import java.util.Random;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.LocateRegistry;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.nio.file.Files;
+// import java.nio.file.DirectoryStream;
 
 // This class avoids creating more than one registry by JVM, that is, all the
 // Storage objects in a JVM use the same registry.
@@ -29,7 +35,8 @@ public class Storage implements StorageClient {
 		Storage storage = new Storage();
 		try {
 			/* Create local filesystem tree. */
-			storage.fs = createFilesystem(storageMountName);
+			storage.nfsMountPath = new String[] {"", storageMountName};
+			storage.fs = createFilesystem(storage.nfsMountPath);
 
 			/* Create local RMI registry. */
 			createLocalRegistry();
@@ -59,15 +66,16 @@ public class Storage implements StorageClient {
 				return null;
 			}
 
-			// Populate storage directory tree in the metadata server
-			// - percorrer a árvore do filesystem em preorder: current dir, dirs,
-			// files e depois entro nos dir por ordem?
-			// - ler o filesystem e posso criar uma queue de diretórios, e depois
-			// faço chamadas para criar todos
-			// - depois posso criar todos os ficheiros que encontrei ao listar
+			storage.storagePath =
+				Files.createTempDirectory("nfs-storage-" + storageMountName + "-");
+			// storage.storagePath.toFile().deleteOnExit();
+			// TODO: just deletes the directory if it is empty.
+			// Find a way to remove everything from directory before exiting?
+			// https://docs.oracle.com/en/java/javase/15/docs/api/java.base/java/lang/Runtime.html#addShutdownHook(java.lang.Thread)
+
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
+			storage = null;
 		}
 		return storage;
 	}
@@ -90,28 +98,36 @@ public class Storage implements StorageClient {
 		localRegistryPort = port;
 	}
 
-	private static Filesystem createFilesystem(String mount) {
-		// must receive as an argument the local directory where the filesystem
-		// will be stored
-		// return createTestFilesystem();
+	/**
+	 * 
+	 * @param mount name of the directory that is the start of the area of control
+	 * of the storage server.
+	 * @return
+	 */
+	private static Filesystem createFilesystem(String[] mountPath) {
+		// Can be extended to support mount points not just on the root of the
+		// tree.
 		Filesystem fs = new Filesystem();
-		fs.createStorageDirectory(new String[] {"", mount}, "not_relevant");
+		fs.createStorageDirectory(mountPath, "not_relevant");
 		return fs;
 	}
 
-	private static Filesystem createTestFilesystem() {
-		Filesystem fs = new Filesystem();
-		fs.createDirectory(new String[] {"", "dir1"});
-		fs.createDirectory(new String[] {"", "dir2"});
-		fs.createDirectory(new String[] {"", "dir3"});
-		fs.createDirectory(new String[] {"", "dir3", "dir4"});
-		fs.createDirectory(new String[] {"", "dir3", "dir5"});
-		fs.createFile(new String[] {"", "f1"}, 11);
-		fs.createFile(new String[] {"", "dir1", "f2"}, 22);
-		fs.createFile(new String[] {"", "dir1", "f3"}, 33);
-		fs.createFile(new String[] {"", "dir3", "dir5", "f4"}, 44);
-		fs.createFile(new String[] {"", "dir3", "dir5", "f5"}, 55);
-		return fs;
+	private static void populateFilesystemWithLocalDirectoryContents(
+				Path localDirectory,
+				Filesystem fs)
+	{
+		// Tem que contactar o servidor de metadados para criar a entrada.
+		// Tem que manter o registo do dir base para poder usar relativize
+		
+		// try (DirectoryStream<Path> s = Files.newDirectoryStream(localDirectory)) {
+		// 	for (Path item: s) {
+		// 		System.out.println(item.getFileName());
+		// 	}
+		// } catch (IOException | DirectoryIteratorException x) {
+		// 	// IOException can never be thrown by the iteration.
+		// 	// In this snippet, it can only be thrown by newDirectoryStream.
+		// 	System.err.println(x);
+		// }
 	}
 
 	// ----------------------
@@ -119,6 +135,8 @@ public class Storage implements StorageClient {
 	private MetaServerStorage metadataServer;
 	private Filesystem fs;
 	private String storageId;
+	private Path storagePath;
+	private String[] nfsMountPath;
 
 	// Create a storage instance calling the static method createStorage()
 	private Storage() {
@@ -127,18 +145,39 @@ public class Storage implements StorageClient {
 		storageId = null;
 	}
 
-	public ReturnStatus createFile(String[] path, String contents) throws RemoteException {
+	private boolean underManagement(String[] path) {
+		return fs.exists(path) && path.length >= nfsMountPath.length;
+	}
+
+	private Path transformToLocalPath(String[] nfsPath) {
+		return Paths.get(storagePath.toString(),
+		                 Arrays.copyOfRange(nfsPath, nfsMountPath.length,
+		                                    nfsPath.length));
+	}
+
+	public ReturnStatus createFile(String[] path, byte[] contents) throws RemoteException {
 		System.out.println("Client -> Storage:: createFile: "
-		                   + Path.convertPath(path) + " " + contents.length());
+		                   + NFSPath.convertPath(path) + " " + contents.length);
 		ReturnStatus r;
-		r = fs.createFile(path, contents.length());
+		r = fs.createFile(path, contents.length);
 		if (!r.ok) {
 			System.out.println(r.message);
 			return r;
 		}
+		Path f = null;
+		try {
+			f = Files.write(transformToLocalPath(path), contents);
+		} catch (Exception e) {
+			System.err.println("Failed to create file.");
+			e.printStackTrace();
+		}
+		if (f == null) {
+			// TODO: delete entry in filesystem object
+			return FAILURE_UNABLE_TO_CREATE_FILE;
+		}
 		System.out.println("Storage -> Meta:: addFile: "
-		                   + Path.convertPath(path));
-		r = metadataServer.addFile(path, contents.length());
+		                   + NFSPath.convertPath(path));
+		r = metadataServer.addFile(path, contents.length);
 		if (!r.ok) {
 			System.out.println(r.message);
 		}
@@ -147,15 +186,26 @@ public class Storage implements StorageClient {
 
 	public ReturnStatus createDirectory(String[] path) throws RemoteException {
 		System.out.println("Client -> Storage:: createDirectory: "
-		                   + Path.convertPath(path));
+		                   + NFSPath.convertPath(path));
 		ReturnStatus r;
 		r = fs.createDirectory(path);
 		if (!r.ok) {
 			System.out.println(r.message);
 			return r;
 		}
+		Path f = null;
+		try {
+			f = Files.createDirectory(transformToLocalPath(path));
+		} catch (Exception e) {
+			System.err.println("Failed to create directory.");
+			e.printStackTrace();
+		}
+		if (f == null) {
+			// TODO: delete entry in filesystem object
+			return FAILURE_UNABLE_TO_CREATE_DIRECTORY;
+		}
 		System.out.println("Storage -> Meta:: addDirectory: "
-		                   + Path.convertPath(path));
+		                   + NFSPath.convertPath(path));
 		r = metadataServer.addDirectory(path);
 		if (!r.ok) {
 			System.out.println(r.message);
@@ -177,10 +227,18 @@ public class Storage implements StorageClient {
 		return FAILURE_NOT_IMPLEMENTED;
 	}
 
-	public String getFile(String[] path) throws RemoteException {
-		// TODO: Find the proper way to transmit a file.
-		// null if the file does not exist.
-		// empty if the file is empty.
-		return "File contents: " + path;
+	public byte[] getFile(String[] path) throws RemoteException {
+		if (!underManagement(path)) {
+			return null;
+		}
+		Path p = transformToLocalPath(path);
+		byte[] file = null;
+		try {
+			file = Files.readAllBytes(p);
+		} catch (IOException e) {
+			System.err.println("Could not read: " + p);
+			e.printStackTrace();
+		}
+		return file;
 	}
 }

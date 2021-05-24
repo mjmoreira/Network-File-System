@@ -3,8 +3,8 @@ package nfs.shared;
 import java.io.Serializable;
 
 /**
- * The StorageInformation contains all the information the Storage server needs
- * to provide to the Metadata server, to successfully creating a new directory
+ * The StorageInformation contains all the information a Storage server needs
+ * to provide to the Metadata server to successfully create a new directory
  * managed by a Storage server.
  */
 public class StorageInformation implements Serializable {

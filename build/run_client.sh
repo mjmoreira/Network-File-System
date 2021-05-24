@@ -1,3 +1,3 @@
 #!/bin/bash
 
-java -cp app/ nfs.client.Client localhost
+java -cp app/ nfs.client.CommandLine localhost

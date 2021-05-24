@@ -11,23 +11,16 @@ public class StorageServer {
 			System.setSecurityManager(new SecurityManager());
 		}
 
-		try {
-			Storage storage =
-				Storage.createStorage("localhost",
-				                      Constants.REGISTRY_PORT,
-				                      Constants.METADATA_REGISTRY_ID,
-				                      "storage1");
-			
-			storage.createDirectory(new String[] {"", "storage1", "dir1"});
-			storage.createDirectory(new String[] {"", "storage1", "dir2"});
-			storage.createFile(new String[] {"", "storage1", "f1"}, "contents1");
-			storage.createFile(new String[] {"", "storage1", "f2"}, "cont2");
-			storage.createFile(new String[] {"", "storage1", "dir1", "f3"}, "");
-			
-			System.out.println("StorageServer created.");
-		} catch (Exception e) {
-			System.err.println("StorageServer exception:");
-			e.printStackTrace();
+		Storage storage =
+			Storage.createStorage("localhost",
+			                      Constants.REGISTRY_PORT,
+			                      Constants.METADATA_REGISTRY_ID,
+			                      "storage1");
+		
+		if (storage == null) {
+			System.out.println("Failed to create StorageServer.");
+			System.exit(1);
 		}
+		System.out.println("StorageServer created.");
 	}
 }

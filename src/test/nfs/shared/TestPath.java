@@ -1,6 +1,6 @@
 package nfs.shared;
 
-import static nfs.shared.Path.*;
+import static nfs.shared.NFSPath.*;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;

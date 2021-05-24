@@ -11,7 +11,9 @@ public enum ReturnStatus {
 		(false, "Failure: path is not owned by a storage server."),
 	FAILURE_STORAGE_MOUNT_TOO_DEEP
 		(false, "Failure: storage mount point is too deep."),
-	FAILURE_INVALID_STORAGE_ID (false, "Failure: invalid storage identifier.");
+	FAILURE_INVALID_STORAGE_ID (false, "Failure: invalid storage identifier."),
+	FAILURE_UNABLE_TO_CREATE_FILE (false, "Failure: unable to create file."),
+	FAILURE_UNABLE_TO_CREATE_DIRECTORY (false, "Failure: unable to create directory.");
 
 	public final boolean ok;
 	public final String message;

@@ -1,7 +1,6 @@
 package nfs.shared;
 
 import java.util.LinkedList;
-import java.util.regex.Pattern;
 
 import nfs.filesystem.File;
 
@@ -9,7 +8,7 @@ import nfs.filesystem.File;
 /**
  * All paths must be canonical.
  */
-public class Path {
+public class NFSPath {
 	// Examples:
 	//  ___________________________________________________
 	// |       String       |           String[]           |

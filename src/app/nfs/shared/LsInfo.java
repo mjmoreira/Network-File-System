@@ -32,9 +32,33 @@ public class LsInfo implements Serializable {
 		}
 	}
 
+	public boolean hasFile(String fileName) {
+		if (fileName == null || files == null) {
+			return false;
+		}
+		for (LsFile f: files) {
+			if (fileName.equals(f.name)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean hasDirectory(String directoryName) {
+		if (directoryName == null || directories == null) {
+			return false;
+		}
+		for (LsDirectory d: directories) {
+			if (directories.equals(d.name)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public String toString() {
-		return "[Path: " + Path.convertPath(path)
+		return "[Path: " + NFSPath.convertPath(path)
 		        + ", storage: " + storageId
 		        + ", directories: " + Arrays.toString(directories)
 		        + ", files: " + Arrays.toString(files)

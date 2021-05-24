@@ -1,6 +1,6 @@
 package nfs.filesystem;
 
-import nfs.shared.Path;
+import nfs.shared.NFSPath;
 import nfs.shared.LsInfo;
 import nfs.shared.ReturnStatus;
 import static nfs.shared.ReturnStatus.*;
@@ -15,7 +15,7 @@ public final class Filesystem {
 
 
 	public ReturnStatus createFile(String[] path, long size) {
-		if (!Path.isValidPath(path)) {
+		if (!NFSPath.isValidPath(path)) {
 			return FAILURE_INVALID_PATH;
 		}
 		if (path.length < 3) { // No files in root.
@@ -32,7 +32,7 @@ public final class Filesystem {
 	}
 
 	public ReturnStatus createStorageDirectory(String[] path, String storageId) {
-		if (!Path.isValidPath(path)) {
+		if (!NFSPath.isValidPath(path)) {
 			return FAILURE_INVALID_PATH;
 		}
 		if (path.length > 2) { // storage root directory must be a child of root.
@@ -49,7 +49,7 @@ public final class Filesystem {
 	}
 
 	public ReturnStatus createDirectory(String[] path) {
-		if (!Path.isValidPath(path)) {
+		if (!NFSPath.isValidPath(path)) {
 			return FAILURE_INVALID_PATH;
 		}
 
@@ -67,10 +67,19 @@ public final class Filesystem {
 	}
 
 	public LsInfo listDirectory(String[] path) {
-		if (!Path.isValidPath(path)) {
+		if (!NFSPath.isValidPath(path)) {
 			return null;
 		}
 		
+		if (path.length == 1) {
+			if (path[0] == "") {
+				return root.generateLsInfo();
+			}
+			else {
+				return null;
+			}
+		}
+
 		// Traverse the path until we reach the parent directory of
 		// path[path.length -1].
 		// The objective is to provide a listing of the parent directory if the
@@ -83,10 +92,7 @@ public final class Filesystem {
 		if (parent == null) {
 			return null;
 		}
-		// Special case: "parent" is the actual directory to be listed.
-		if (parent == root && path.length == 1) {
-			return parent.generateLsInfo();
-		}
+
 		// Check if the path leads to a directory.
 		Directory dir = parent.getChildDirectory(path[path.length - 1]);
 		// If the path leads to a file, the parent directory is listed.
@@ -100,5 +106,44 @@ public final class Filesystem {
 		}
 
 		return dir.generateLsInfo();
+	}
+
+	public boolean exists(String[] path) {
+		if (!NFSPath.isValidPath(path)) {
+			return false;
+		}
+
+		// path is just root
+		if (path.length == 1) {
+			if (path[0] == "") {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+
+		// Traverse the path until we reach the parent directory of
+		// path[path.length -1], path[path.length - 2]
+		Directory parent = Directory.navigatePath(root, path, path.length - 1);
+		if (parent == null) {
+			// Path does not exist.
+			return false;
+		}
+
+		// Check if the path leads to a directory.
+		Directory dir = parent.getChildDirectory(path[path.length - 1]);
+		if (dir != null) {
+			return true;
+		}
+		else {
+			if (parent.getChildFile(path[path.length - 1]) == null) {
+				// It is neither a directory nor a file
+				return false;
+			}
+			else {
+				return true;
+			}
+		}
 	}
 }

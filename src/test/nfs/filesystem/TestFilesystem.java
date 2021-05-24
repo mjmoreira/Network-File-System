@@ -298,4 +298,37 @@ public class TestFilesystem {
 		LsInfo info2 = f.listDirectory(pathDir2);
 		assertTrue(STORAGE_ID.equals(info2.storageId));
 	}
+
+	@Test
+	void exits_file_directory() {
+		Filesystem f = new Filesystem();
+		String[] path = {"", "storage"};
+		assertEquals(SUCCESS, f.createStorageDirectory(path, "storage"));
+		assertTrue(f.exists(path));
+		assertFalse(f.exists(new String[] {"", "inexistent"}));
+
+		String[] pathDir = {"", "storage", "dir1"};
+		assertEquals(SUCCESS, f.createDirectory(pathDir));
+		assertTrue(f.exists(pathDir));
+
+		String[] pathF1 = {"", "storage", "dir1", "file1.asdf"};
+		String[] pathD1 = {"", "storage", "dir1", "subdir1"};
+		assertEquals(SUCCESS, f.createFile(pathF1, 2345));
+		assertEquals(SUCCESS, f.createDirectory(pathD1));
+		assertTrue(f.exists(pathF1));
+		assertTrue(f.exists(pathD1));
+
+		String[] pathF2 = {"", "storage", "dir1", "file2.asdf"};
+		String[] pathD2 = {"", "storage", "dir1", "subdir2"};
+		assertFalse(f.exists(pathF2));
+		assertFalse(f.exists(pathD2));
+	}
+
+	@Test
+	void exists_root() {
+		Filesystem f = new Filesystem();
+		String[] root = {""};
+		assertTrue(f.exists(root));
+		assertFalse(f.exists(new String[] {"", ""}));
+	}
 }

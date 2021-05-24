@@ -4,7 +4,7 @@ import nfs.interfaces.MetaServerClient;
 import nfs.interfaces.MetaServerStorage;
 import nfs.shared.Constants;
 import nfs.shared.LsInfo;
-import nfs.shared.Path;
+import nfs.shared.NFSPath;
 import nfs.shared.StorageInformation;
 import nfs.filesystem.Filesystem;
 import nfs.shared.ReturnStatus;
@@ -16,8 +16,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Arrays;
-import java.util.Set;
-import java.util.HashSet;
 
 public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 	private static MetaDataServer server = null;
@@ -28,27 +26,12 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 	}
 
 	private Filesystem filesystem;
-	private Set<String> validStorageIds;
+
+	private StorageMapper storageMapper;
 
 	private MetaDataServer() {
 		filesystem = new Filesystem();
-		validStorageIds = new HashSet<>();
-	}
-
-
-	public void createTestFilesystemTree() {
-		Filesystem f = filesystem;
-		f.createStorageDirectory(new String[] {"", "s1"}, "storageId-1");
-		f.createDirectory(new String[] {"", "s1", "d1"});
-		f.createDirectory(new String[] {"", "s1", "d1", "d2"});
-		f.createDirectory(new String[] {"", "s1", "d1", "d2", "d3"});
-		f.createFile(new String[] {"", "s1", "f1"}, 11L);
-		f.createFile(new String[] {"", "s1", "f2"}, 22L);
-		f.createFile(new String[] {"", "s1", "d1", "d2", "d3", "f3"}, 33L);
-		f.createFile(new String[] {"", "s1", "d1", "d2", "d3", "f4"}, 44L);
-		f.createFile(new String[] {"", "s1", "d1", "f5"}, 55L);
-		f.createStorageDirectory(new String[] {"", "s2"}, "storageId-2");
-		f.createDirectory(new String[] {"", "s2", "d1"});
+		storageMapper = new StorageMapper();
 	}
 
 	// Client methods
@@ -58,23 +41,29 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 		return filesystem.listDirectory(path);
 	}
 
+	public StorageInformation getStorageInformation(String storageId)
+			throws RemoteException {
+		System.out.println("Client -> Meta:: getStorageInformation: " + storageId);
+		return storageMapper.getStorageServer(storageId);
+	}
+
 	// ---------------------------
 
 	// Storage methods
 
-	public ReturnStatus addStorageServer(StorageInformation sl)
+	public ReturnStatus addStorageServer(StorageInformation si)
 			throws RemoteException {
-		System.out.println("Storage -> Meta:: addStorageServer: " + sl.mountName);
-		if (!validStorageIds.contains(sl.storageId)) {
+		System.out.println("Storage -> Meta:: addStorageServer: " + si.mountName);
+		if (!storageMapper.addStorageServer(si)) {
 			return FAILURE_INVALID_STORAGE_ID;
 		}
-		return filesystem.createStorageDirectory(new String[] {"", sl.mountName},
-		                                         sl.storageId);
+		return filesystem.createStorageDirectory(new String[] {"", si.mountName},
+		                                         si.storageId);
 	}
 
-	public ReturnStatus deleteStorageServer(StorageInformation sl)
+	public ReturnStatus deleteStorageServer(StorageInformation si)
 			throws RemoteException {
-		System.out.println("Storage -> Meta:: deleteStorageServer: " + sl.mountName);
+		System.out.println("Storage -> Meta:: deleteStorageServer: " + si.mountName);
 		return FAILURE_NOT_IMPLEMENTED;
 	}
 
@@ -82,25 +71,23 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 	// Alternatively, the cookie can be returned when the storage is officially
 	// created.
 	public String getNewStorageId() throws RemoteException {
-		String id = "Storage-" + System.nanoTime();
-		validStorageIds.add(id);
-		return id;
+		return storageMapper.getNewStorageId();
 	}
 
 	public ReturnStatus addFile(String[] path, long size) throws RemoteException {
-		System.out.println("Storage -> Meta:: addFile: " + Path.convertPath(path));
+		System.out.println("Storage -> Meta:: addFile: " + NFSPath.convertPath(path));
 		return filesystem.createFile(path, size);
 	}
 	public ReturnStatus addDirectory(String[] path) throws RemoteException {
-		System.out.println("Storage -> Meta:: addDirectory: " + Path.convertPath(path));
+		System.out.println("Storage -> Meta:: addDirectory: " + NFSPath.convertPath(path));
 		return filesystem.createDirectory(path);
 	}
 	public ReturnStatus removeFile(String[] path) throws RemoteException {
-		System.out.println("Storage -> Meta:: removeFile: " + Path.convertPath(path));
+		System.out.println("Storage -> Meta:: removeFile: " + NFSPath.convertPath(path));
 		return FAILURE_NOT_IMPLEMENTED;
 	}
 	public ReturnStatus removeDirectory(String[] path) throws RemoteException {
-		System.out.println("Storage -> Meta:: removeDirectory: " + Path.convertPath(path));
+		System.out.println("Storage -> Meta:: removeDirectory: " + NFSPath.convertPath(path));
 		return FAILURE_NOT_IMPLEMENTED;
 	}
 
@@ -112,8 +99,7 @@ public class MetaDataServer implements MetaServerClient, MetaServerStorage {
 		}
 		try {
 			MetaDataServer server = new MetaDataServer();
-			server.createTestFilesystemTree();
-			Remote stub = UnicastRemoteObject.exportObject((Remote) server, 0);
+			Remote stub = UnicastRemoteObject.exportObject(server, 0);
 			Registry registry = LocateRegistry.createRegistry(Constants.REGISTRY_PORT);
 			registry.rebind(Constants.METADATA_REGISTRY_ID, stub);
 			System.out.println("MetaDataServer created.");
