@@ -11,11 +11,15 @@ public class StorageServer {
 			System.setSecurityManager(new SecurityManager());
 		}
 
+		String storageName = "storage1";
+		if (args.length == 1) {
+			storageName = args[0];
+		}
 		Storage storage =
 			Storage.createStorage("localhost",
 			                      Constants.REGISTRY_PORT,
 			                      Constants.METADATA_REGISTRY_ID,
-			                      "storage1");
+			                      storageName);
 		
 		if (storage == null) {
 			System.out.println("Failed to create StorageServer.");
