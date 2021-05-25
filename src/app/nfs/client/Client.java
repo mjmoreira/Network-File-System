@@ -9,7 +9,6 @@ import java.util.HashMap;
 
 import nfs.interfaces.MetaServerClient;
 import nfs.interfaces.StorageClient;
-import nfs.shared.LsFile;
 import nfs.shared.LsInfo;
 import nfs.shared.NFSPath;
 import nfs.shared.StorageInformation;
@@ -43,7 +42,7 @@ class Client {
 			throws NullPointerException {
 		meta = (MetaServerClient) getRemoteStub(address, registryPort, registryId);
 		if (meta == null) {
-			throw new NullPointerException("metadata is null.");
+			throw new NullPointerException("Unable to connect with metadata server.");
 		}
 		storages = new HashMap<>();
 	}
@@ -52,7 +51,10 @@ class Client {
 		LsInfo info = null;
 		try {
 			info = meta.listDir(path);
-		} catch (RemoteException e) {}
+		} catch (RemoteException e) {
+			System.out.println("Client.list: Could not get listing from metadata.");
+			e.printStackTrace();
+		}
 		return info;
 	}
 
@@ -60,60 +62,104 @@ class Client {
 		String fileName = path[path.length - 1];
 		LsInfo info = list(Arrays.copyOf(path, path.length - 1));
 		if (info == null) {
-			System.err.println("path does not exist return code");
+			System.err.println("Client.createFile: Path does not exist.");
 			return false;
 		}
 		if (info.hasDirectory(fileName) || info.hasFile(fileName)) {
-			System.err.println("file or directory with same name already exists return code");
+			System.out.println("Client.createFile: File or directory with same "
+			                   + "name already exists.");
+			return false;
+		}
+		if (info.storageId == null) {
+			System.out.println("Client.createFile: Parent directory is not "
+			                   + "owned by a storage server.");
 			return false;
 		}
 
 		StorageClient storage = getStorageStub(info.storageId);
 		if (storage == null) {
-			System.err.println("Client.createFile: Couldn't get stub for storage: "
+			System.out.println("Client.createFile: Could not get stub for storage: "
 			                   + info.storageId);
 			return false;
 		}
+
 		ReturnStatus status = FAILURE_NOT_IMPLEMENTED;
 		try {
 			status = storage.createFile(path, contents);
 		} catch (RemoteException e) {
+			System.out.println("Client.createFile: Cound not create file at "
+			                   + "storage server.");
 			e.printStackTrace();
+		}
+
+		if (!status.ok && status != FAILURE_NOT_IMPLEMENTED) {
+			System.out.println("Client.createFile: " + status.message);
 		}
 		return status == SUCCESS;
 	}
 
 	byte[] getFile(String[] path) {
-		LsInfo info = list(path);
-		if (!fileExists(path[path.length - 1], info.files)) {
+		LsInfo info = list(Arrays.copyOf(path, path.length - 1));
+		if (info == null || !info.hasFile(path[path.length - 1])) {
 			return null;
 		}
 		StorageClient storage = getStorageStub(info.storageId);
 		if (storage == null) {
-			System.err.println("Client.getFile: Couldn't get stub for storage: "
+			System.out.println("Client.getFile: Couldn't get stub for storage: "
 			                   + info.storageId);
 			return null;
 		}
+
 		byte[] contents = null;
 		try {
 			contents = storage.getFile(path);
 		} catch (RemoteException e) {
-			System.err.println("Client.getFile: Couldn't get file from storage: "
+			System.out.println("Client.getFile: Couldn't get file from storage: "
 			                   + NFSPath.convertPath(path));
 			e.printStackTrace();
 		}
 		return contents;
 	}
 
-	private boolean fileExists(String name, LsFile[] files) {
-		if (files != null) {
-			for (int i = 0; i < files.length; i++) {
-				if (files[i].name.equals(name)) {
-					return true;
-				}
-			}
+	boolean createDirectory(String[] path) {
+		String dirName = path[path.length - 1];
+		LsInfo info = list(Arrays.copyOf(path, path.length - 1));
+		if (info == null) {
+			System.out.println("Client.createDirectory: parent directory does "
+			                   + "not exist.");
+			return false;
 		}
-		return false;
+		if (info.hasDirectory(dirName) || info.hasFile(dirName)) {
+			System.out.println("Client.createDirectory: "
+			                   + path[path.length - 1] + " already exists.");
+			return false;
+		}
+		if (info.storageId == null) {
+			System.out.println("Client.createDirectory: Parent directory is "
+			                   + "not owned by a storage server.");
+			return false;
+		}
+
+		StorageClient storage = getStorageStub(info.storageId);
+		if (storage == null) {
+			System.out.println("Client.createDirectory: Couldn't get stub for "
+			                   + "storage: " + info.storageId);
+			return false;
+		}
+		
+		ReturnStatus status = FAILURE_NOT_IMPLEMENTED;
+		try {
+			status = storage.createDirectory(path);
+		} catch (RemoteException e) {
+			System.out.println("Client.createDirectory: Unable to connect with "
+			                   + "storage to create directory."); // ?
+			e.printStackTrace();
+		}
+
+		if (!status.ok && status != FAILURE_NOT_IMPLEMENTED) {
+			System.out.println("Client.createDirectory: " + status.message);
+		}
+		return status == SUCCESS; // alternatively: return status.ok;
 	}
 
 	/**
